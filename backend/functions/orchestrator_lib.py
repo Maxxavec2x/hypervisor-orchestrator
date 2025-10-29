@@ -17,11 +17,11 @@ def get_connector_to_node(ip):
 # Renvoie un dictionnaireavec le format :
 # {id : dict} avec un dictionnaire pour chaque id, contenant l'info sur le domain id
 def get_node_info(conn):
+    #print(conn.__dir__())
     domainIds = [domain for domain in conn.listDomainsID()]
-    print("Id des domains " + str(domainIds))
     nodeInfos = {}
-    for id in domainIds:
-        domain = conn.lookupByID(id)
+    domains = conn.listAllDomains()
+    for domain in domains:
         domainInfo = domain.info()
         domainInfoDict = create_info_object(domainInfo)
         nodeInfos[id] = domainInfoDict
