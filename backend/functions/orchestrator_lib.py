@@ -7,7 +7,7 @@ import sys
 # Take an ip of an hypervisor and return the connector to it
 def get_connector_to_node(ip):
     try:
-        conn = libvirt.open("qemu:///system")
+        conn = libvirt.open(f"qemu+ssh://{ip}/system")
         return conn
     except libvirt.libvirtError:
         print('Failed to open connection to the hypervisor')
