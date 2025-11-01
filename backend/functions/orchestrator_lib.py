@@ -2,6 +2,7 @@
 
 import libvirt
 import sys
+from objects.DomainInfo import DomainInfo
 
 # Take an ip of an hypervisor and return the connector to it
 def get_connector_to_node(ip):
@@ -14,5 +15,17 @@ def get_connector_to_node(ip):
 
 def get_node_info(conn):
     nodeInfo = conn.getInfo()
-    print(nodeInfo)
     return nodeInfo
+
+def get_domain_info(conn, id):
+    dom = conn.lookupByID(id)
+    info = libvirt.virDomainGetInfo(dom)
+
+# Cette méthode renvoie une liste de DomainInfo, qui contienne leur propose objet Domain, ce qui permettra de l'utiliser pour certains actions 
+# TODO: : On pourrait mettre les DomainInfo dans une bdd relationnelle
+def get_all_domain_info(conn):
+    domains = []
+    domainsInfos = conn.getAllDomainStats()
+    for domain in domainsInfos:
+       domains.append(DomainInfo(domain[0], domain[1]))
+    return domains
