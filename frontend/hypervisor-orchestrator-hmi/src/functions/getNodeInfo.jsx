@@ -8,6 +8,7 @@ export function GetNodeInfo(nodeIp) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    setError(null);
     const fetchNodes = async () => {
       try {
         const res = await fetch(API_URL);
