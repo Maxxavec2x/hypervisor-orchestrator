@@ -1,5 +1,6 @@
 import './App.css';
 import {HomeComponent }from "./components/HomeComponent.jsx"
+import 'bootstrap/dist/css/bootstrap.min.css';
 function App() {
   return (
   <div>

@@ -2,7 +2,7 @@ import NodeInfo from "./NodeInfo.jsx"
 import NodeList from "./NodeList.jsx"
 export const HomeComponent = () => {
 
-return (
+  return (
     <NodeList/>
   )
 }
