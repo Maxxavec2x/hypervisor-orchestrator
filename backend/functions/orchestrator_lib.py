@@ -54,3 +54,17 @@ def destroy_domain(conn, name):
     except :
         print("Unknown error: Failed to destroy domain")
         return make_response("<h1>Unknown: Error when destroying domain</h1>", 400)
+
+def undefine_domain(conn, name):
+    # Don't delete the VM disk and snapshots if exists
+    try:
+        dom = conn.lookupByName(name)
+        dom.undefineFlags(libvirt.VIR_DOMAIN_UNDEFINE_MANAGED_SAVE ^ libvirt.VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA ^ libvirt.VIR_DOMAIN_UNDEFINE_CHECKPOINTS_METADATA ^ libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
+        return make_response("<h1>Success</h1>", 200)
+    except libvirt.libvirtError:
+        print('libvirtError: Failed to undefine domain')
+        return make_response("<h1>libvirtError: Error when undefine domain</h1>", 400)
+    except Exception as e:
+        print("Unknown error: Failed to undefine domain")
+        print(e)
+        return make_response("<h1>Unknown: Error when undefine domain</h1>", 400)

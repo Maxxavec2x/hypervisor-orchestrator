@@ -32,6 +32,11 @@ def create_domain_endpoint(ip, name):
 def destroy_domain_endpoint(ip, name):
     return destroy_domain(get_connector_to_node(ip), name)
 
+@app.route("/node/<ip>/domains/undefine/<name>", methods=['POST'])
+def undefine_domain_endpoint(ip, name):
+    return undefine_domain(get_connector_to_node(ip), name)
+
+
 # Pour les tests
 if __name__ == '__main__':
     app.run(debug=True)
