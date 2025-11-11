@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import NodeInfo from "./NodeInfo";
+import NodeInfo from "./NodeInfo.jsx";
 import { Sidebar } from "./Sidebar";
 import { NodeAdder } from "./NodeAdder";
 
