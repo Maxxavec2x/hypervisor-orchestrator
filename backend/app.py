@@ -28,6 +28,10 @@ def get_all_domains_info_endpoint(ip):
 def create_domain_endpoint(ip, name):
     return create_domain(get_connector_to_node(ip), name)
 
+@app.route("/node/<ip>/domains/destroy/<name>", methods=['POST'])
+def destroy_domain_endpoint(ip, name):
+    return destroy_domain(get_connector_to_node(ip), name)
+
 # Pour les tests
 if __name__ == '__main__':
     app.run(debug=True)
