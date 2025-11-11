@@ -3,7 +3,10 @@ import json
 from pprint import pprint
 from functions.orchestrator_lib import *
 from objects.NodeInfo import NodeInfo
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 
 # Permet de récupérer les infos d'un node
 @app.route("/node/<ip>/info", methods=['GET'])
