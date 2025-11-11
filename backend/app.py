@@ -36,6 +36,13 @@ def destroy_domain_endpoint(ip, name):
 def undefine_domain_endpoint(ip, name):
     return undefine_domain(get_connector_to_node(ip), name)
 
+@app.route("/node/<ip>/domains/getsnapshot/<name>", methods=['GET'])
+def get_snapshot_name_domain_endpoint(ip, name):
+    snapshot_array = get_snapshot_name_domain(get_connector_to_node(ip), name)
+    snapshot_dict = [{index:snapshot} for snapshot, index in enumerate(snapshot_array)]
+    # TODO: Voir Maxx le format du retour
+    return jsonify(snapshot_dict)
+
 
 # Pour les tests
 if __name__ == '__main__':
