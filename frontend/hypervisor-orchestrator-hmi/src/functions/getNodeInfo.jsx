@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 
-const API_URL="http://localhost:5000/node/localhost/info"
-
-export function GetNodeInfo() {
+export function GetNodeInfo(nodeIp) {
+  
+  const API_URL=`http://localhost:5000/node/${nodeIp}/info`
   const [node, setNode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,7 +22,7 @@ export function GetNodeInfo() {
     };
 
     fetchNodes();
-  }, []);
+  }, [API_URL]);
 
   return { node, loading, error };
 }

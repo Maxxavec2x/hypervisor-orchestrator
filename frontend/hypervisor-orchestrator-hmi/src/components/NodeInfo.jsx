@@ -1,6 +1,6 @@
 import { GetNodeInfo } from "../functions/getNodeInfo.jsx"
-export const NodeInfo = () => {
-  const { node, loading, error } = GetNodeInfo();
+export const NodeInfo = (props) => {
+  const { node, loading, error } = GetNodeInfo(props.nodeIp);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error : {error.text}</p>;
