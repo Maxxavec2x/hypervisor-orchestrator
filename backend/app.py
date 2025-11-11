@@ -21,6 +21,10 @@ def get_all_domains_info_endpoint(ip):
     domain_dicts = [domain.to_dict() for domain in domainArray]
     return jsonify(domain_dicts)
 
+@app.route("/node/<ip>/domains/create/<name>", methods=['POST'])
+def create_domain_endpoint(ip, name):
+    return create_domain(get_connector_to_node(ip), name)
+
 # Pour les tests
 if __name__ == '__main__':
     app.run(debug=True)

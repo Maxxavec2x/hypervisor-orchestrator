@@ -3,6 +3,7 @@
 import libvirt
 import sys
 from objects.DomainInfo import DomainInfo
+from flask import make_response
 
 # Take an ip of an hypervisor and return the connector to it
 def get_connector_to_node(ip):
@@ -29,3 +30,15 @@ def get_all_domain_info(conn):
     for domain in domainsInfos:
        domains.append(DomainInfo(domain[0], domain[1]))
     return domains
+
+def create_domain(conn, name):
+    try:
+        dom = conn.lookupByName(name)
+        dom.create()
+        return make_response("<h1>Success</h1>", 200)
+    except libvirt.libvirtError:
+        print('libvirtError: Failed to create domain')
+        return make_response("<h1>libvirtError: Error when creating domain</h1>", 400)
+    except :
+        print("Unknown error: Failed to create domain")
+        return make_response("<h1>Unknown: Error when creating domain</h1>", 400)
