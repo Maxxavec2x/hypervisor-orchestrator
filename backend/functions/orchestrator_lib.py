@@ -56,3 +56,39 @@ def destroy_domain(conn, name):
     except :
         print("Unknown error: Failed to destroy domain")
         return make_response("<h1>Unknown: Error when destroying domain</h1>", 400)
+<<<<<<< HEAD
+=======
+
+def undefine_domain(conn, name):
+    # NOTE: VM need to be shutdown to see the effect !
+    # Don't delete the VM disk - Error if found an external snapshot (libvirt can't delete it: https://wiki.libvirt.org/I_created_an_external_snapshot_but_libvirt_will_not_let_me_delete_or_revert_to_it.html)
+    try:
+        dom = conn.lookupByName(name)
+
+        flags = libvirt.VIR_DOMAIN_UNDEFINE_NVRAM
+        if dom.hasManagedSaveImage():
+            flags ^= libvirt.VIR_DOMAIN_UNDEFINE_MANAGED_SAVE
+        if dom.hasCurrentSnapshot():
+            for snapshot in dom.listAllSnapshots():
+                snapshot.delete()
+            flags ^= libvirt.VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA
+        if dom.listAllCheckpoints():
+            flags ^= libvirt.VIR_DOMAIN_UNDEFINE_CHECKPOINTS_METADATA
+        
+        dom.undefineFlags(flags)
+        return make_response("<h1>Success</h1>", 200)
+
+    except libvirt.libvirtError:
+        return make_response("<h1>libvirtError: Error when undefine domain</h1>", 400)
+    except Exception as e:
+        return make_response("<h1>Unknown: Error when undefine domain</h1>", 400)
+
+def get_snapshot_name_domain(conn, name):
+    dom = conn.lookupByName(name)
+    snapshots_name = list()
+    for snapshot in dom.listAllSnapshots():
+        if snapshot.isCurrent(): snapshots_name.insert(0, snapshot.getName())
+        else : snapshots_name.append(snapshot.getName())
+
+    return snapshots_name
+>>>>>>> feature/undefine-vm
