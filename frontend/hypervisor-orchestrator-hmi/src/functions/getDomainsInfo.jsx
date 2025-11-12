@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-export function GetDomainsInfo(nodeIp) {
+export  function GetDomainsInfo(nodeIp) {
   const API_URL = `http://localhost:5000/node/${nodeIp}/domains/info`;
 
   const [domains, setDomains] = useState([]);

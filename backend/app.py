@@ -24,7 +24,7 @@ def get_all_domains_info_endpoint(ip):
     domain_dicts = [domain.to_dict() for domain in domainArray]
     return jsonify(domain_dicts)
 
-@app.route("/node/<ip>/domains/create/<name>", methods=['POST'])
+@app.route("/node/<ip>/domains/create/<name>", methods=['GET'])
 def create_domain_endpoint(ip, name):
     return create_domain(get_connector_to_node(ip), name)
 

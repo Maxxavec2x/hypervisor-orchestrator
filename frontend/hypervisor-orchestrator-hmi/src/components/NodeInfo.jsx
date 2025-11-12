@@ -1,11 +1,26 @@
 import React from "react";
-import { Card, Spinner, Alert, Accordion } from "react-bootstrap";
+import { Card, Spinner, Alert } from "react-bootstrap";
+import DomainAccordion from "./DomainAccordion.jsx"
 import { GetNodeInfo } from "../functions/getNodeInfo.jsx";
 import { GetDomainsInfo } from "../functions/getDomainsInfo.jsx";
-import {renderValue} from "../functions/renderValue.js";
+import { StartDomain } from "../functions/startDomain.jsx"
 export const NodeInfo = ({ nodeIp }) => {
   const { node, loading, error } = GetNodeInfo(nodeIp);
   const { domains, loading: domainsLoading, error: domainsError } = GetDomainsInfo(nodeIp);
+
+  const handleDomainStart = (domain) => {
+   try {
+      console.log("test")
+      console.log("node IP " + nodeIp)
+      console.log(JSON.stringify(domain.name))
+      const response = StartDomain(nodeIp, domain); 
+      console.log(response)
+    }
+    catch (err) {
+      console.log(err);
+    }
+   
+  }
 
   if (loading)
     return (
@@ -65,21 +80,12 @@ export const NodeInfo = ({ nodeIp }) => {
 
           
       {!domainsLoading && domains.length > 0 && (
-      <Accordion defaultActiveKey="0">
-        {domains.map((domain, index) => (
-          <Accordion.Item eventKey={index.toString()} key={index}>
-            <Accordion.Header>{domain.name || `Domaine ${index + 1}`}</Accordion.Header>
-            <Accordion.Body>
-              {Object.entries(domain).map(([key, value]) => (
-                <div key={key} style={{ marginBottom: "0.5rem" }}>
-                  <strong>{key}:</strong> {renderValue(value)}
-                </div>
-              ))}
-            </Accordion.Body>
-          </Accordion.Item>
-        ))}
-      </Accordion>
-      )}
+        <DomainAccordion
+          domains={domains}
+          onDomainStart={(domain) => handleDomainStart(domain)}
+          onDomainStop={(domain) => console.log(domain)}
+        />
+)}
 
         </Card.Body>
       </Card>
