@@ -24,10 +24,12 @@ def get_all_domains_info_endpoint(ip):
     domain_dicts = [domain.to_dict() for domain in domainArray]
     return jsonify(domain_dicts)
 
+# Permet de lancer un domaine (une VM)
 @app.route("/node/<ip>/domains/create/<name>", methods=['POST'])
 def create_domain_endpoint(ip, name):
     return create_domain(get_connector_to_node(ip), name)
 
+# Permet de stopper un domaine (eq. shutdown)
 @app.route("/node/<ip>/domains/destroy/<name>", methods=['POST'])
 def destroy_domain_endpoint(ip, name):
     return destroy_domain(get_connector_to_node(ip), name)
