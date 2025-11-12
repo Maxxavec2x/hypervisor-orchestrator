@@ -46,24 +46,7 @@ def get_snapshot_name_domain_endpoint(ip, name):
 # TODO: changer to post
 @app.route("/node/<ip>/domains/defineXML", methods=['POST'])
 def defineXML_domain_endpoint(ip):
-    domain_name = request.form['domain_name']
-    cpu_allocated = request.form['cpu_allocated']
-    ram_allocated = request.form['ram_allocated']
-    xml = f'''
-<domain type='kvm' id='40'>
-  <name>{domain_name}</name>
-  <uuid>4dea22b3-1d52-d8f3-2516-782e98ab3fa0</uuid>
-  <memory unit='KiB'>{ram_allocated}</memory>
-  <currentMemory unit='KiB'>{ram_allocated}</currentMemory>
-  <vcpu placement='static'>{cpu_allocated}</vcpu>
-  <os>
-    <type arch='x86_64' machine='pc-q35-10.0'>hvm</type>
-    <boot dev='hd'/>
-  </os>
-</domain>
-  '''
-    defineXML_domain(get_connector_to_node(ip), xml)
-    return "ok"
+    return defineXML_domain(get_connector_to_node(ip), request)
 
 # Pour les tests
 if __name__ == '__main__':
@@ -72,3 +55,5 @@ if __name__ == '__main__':
     #get_node_info_endpoint("localhost")
     pprint(get_all_domains_info_endpoint("localhost"))
 
+
+# TODO: METTRE DES COMMENTAIRES

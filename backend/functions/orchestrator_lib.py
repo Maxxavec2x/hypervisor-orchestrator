@@ -97,10 +97,27 @@ def get_snapshot_name_domain(conn, name):
     except Exception as e:
         return make_response("<h1>Unknown: Error when getting snapshot</h1>", 400)
 
-def defineXML_domain(conn, xml):
+def defineXML_domain(conn, request):
     # WARNING: Override existing domain with same UUID and name ! Can be used to update a Domain
     try:
-        conn.defineXML(xml)
+        domain_name = request.form['domain_name']
+        cpu_allocated = request.form['cpu_allocated']
+        ram_allocated = request.form['ram_allocated']
+        vm_xml_description = f'''
+        <domain type='kvm' id='40'>
+            <name>{domain_name}</name>
+            <uuid>4dea22b3-1d52-d8f3-2516-782e98ab3fa0</uuid>
+            <memory unit='KiB'>{ram_allocated}</memory>
+            <currentMemory unit='KiB'>{ram_allocated}</currentMemory>
+            <vcpu placement='static'>{cpu_allocated}</vcpu>
+            <os>
+                <type arch='x86_64' machine='pc-q35-10.0'>hvm</type>
+                <boot dev='hd'/>
+            </os>
+        </domain>
+        '''
+        conn.defineXML(vm_xml_description)
+        return make_response("<h1>Success</h1>", 200)
     except libvirt.libvirtError:
         return make_response("<h1>libvirtError: Error when defining domain</h1>", 400)
     except Exception as e:
