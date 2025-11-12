@@ -82,10 +82,26 @@ def undefine_domain(conn, name):
         return make_response("<h1>Unknown: Error when undefine domain</h1>", 400)
 
 def get_snapshot_name_domain(conn, name):
-    dom = conn.lookupByName(name)
-    snapshots_name = list()
-    for snapshot in dom.listAllSnapshots():
-        if snapshot.isCurrent(): snapshots_name.insert(0, snapshot.getName())
-        else : snapshots_name.append(snapshot.getName())
+    """
+        Return a list of all snapshot name attached to the domain name. The first snapshot name in the list is the current.
+    """
+    try:
+        dom = conn.lookupByName(name)
+        snapshots_name = list()
+        for snapshot in dom.listAllSnapshots():
+            if snapshot.isCurrent(): snapshots_name.insert(0, snapshot.getName())
+            else : snapshots_name.append(snapshot.getName())
+        return snapshots_name
+    except libvirt.libvirtError:
+        return make_response("<h1>libvirtError: Error when getting snapshot</h1>", 400)
+    except Exception as e:
+        return make_response("<h1>Unknown: Error when getting snapshot</h1>", 400)
 
-    return snapshots_name
+def defineXML_domain(conn, xml):
+    # WARNING: Override existing domain with same UUID and name ! Can be used to update a Domain
+    try:
+        conn.defineXML(xml)
+    except libvirt.libvirtError:
+        return make_response("<h1>libvirtError: Error when defining domain</h1>", 400)
+    except Exception as e:
+        return make_response("<h1>Unknown: Error when defining domain</h1>", 400)
