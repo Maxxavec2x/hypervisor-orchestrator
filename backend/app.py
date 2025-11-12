@@ -24,15 +24,15 @@ def get_all_domains_info_endpoint(ip):
     domain_dicts = [domain.to_dict() for domain in domainArray]
     return jsonify(domain_dicts)
 
-@app.route("/node/<ip>/domains/create/<name>", methods=['POST'])
+@app.route("/node/<ip>/domains/create/<name>", methods=['GET'])
 def create_domain_endpoint(ip, name):
     return create_domain(get_connector_to_node(ip), name)
 
-@app.route("/node/<ip>/domains/destroy/<name>", methods=['POST'])
+@app.route("/node/<ip>/domains/destroy/<name>", methods=['GET'])
 def destroy_domain_endpoint(ip, name):
     return destroy_domain(get_connector_to_node(ip), name)
 
-@app.route("/node/<ip>/domains/undefine/<name>", methods=['POST'])
+@app.route("/node/<ip>/domains/undefine/<name>", methods=['GET'])
 def undefine_domain_endpoint(ip, name):
     return undefine_domain(get_connector_to_node(ip), name)
 
