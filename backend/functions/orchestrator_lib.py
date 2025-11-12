@@ -31,6 +31,7 @@ def get_all_domain_info(conn):
        domains.append(DomainInfo(domain[0], domain[1]))
     return domains
 
+# Starting a existing domain
 def create_domain(conn, name):
     try:
         dom = conn.lookupByName(name)
@@ -43,6 +44,7 @@ def create_domain(conn, name):
         print("Unknown error: Failed to create domain")
         return make_response("<h1>Unknown: Error when creating domain</h1>", 400)
 
+# Shutdown a domain
 def destroy_domain(conn, name):
     try:
         dom = conn.lookupByName(name)
