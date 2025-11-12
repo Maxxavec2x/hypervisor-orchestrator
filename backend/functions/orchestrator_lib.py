@@ -56,8 +56,6 @@ def destroy_domain(conn, name):
     except :
         print("Unknown error: Failed to destroy domain")
         return make_response("<h1>Unknown: Error when destroying domain</h1>", 400)
-<<<<<<< HEAD
-=======
 
 def undefine_domain(conn, name):
     # NOTE: VM need to be shutdown to see the effect !
@@ -91,4 +89,3 @@ def get_snapshot_name_domain(conn, name):
         else : snapshots_name.append(snapshot.getName())
 
     return snapshots_name
->>>>>>> feature/undefine-vm
