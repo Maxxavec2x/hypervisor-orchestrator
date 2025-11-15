@@ -28,6 +28,22 @@ def get_all_domains_info_endpoint(ip):
 def create_domain_endpoint(ip, name):
     return create_domain(get_connector_to_node(ip), name)
 
+@app.route("/node/<ip>/domains/destroy/<name>", methods=['GET'])
+def destroy_domain_endpoint(ip, name):
+    return destroy_domain(get_connector_to_node(ip), name)
+
+@app.route("/node/<ip>/domains/undefine/<name>", methods=['GET'])
+def undefine_domain_endpoint(ip, name):
+    return undefine_domain(get_connector_to_node(ip), name)
+
+@app.route("/node/<ip>/domains/getsnapshot/<name>", methods=['GET'])
+def get_snapshot_name_domain_endpoint(ip, name):
+    snapshot_array = get_snapshot_name_domain(get_connector_to_node(ip), name)
+    snapshot_dict = [{index:snapshot} for snapshot, index in enumerate(snapshot_array)]
+    # TODO: Voir Maxx le format du retour
+    return jsonify(snapshot_dict)
+
+
 # Pour les tests
 if __name__ == '__main__':
     app.run(debug=True)
