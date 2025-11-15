@@ -1,11 +1,11 @@
-export async function StartDomain(nodeIp, domain) {
+export async function StopDomain(nodeIp, domain) {
   console.log(domain)
-  const API_URL = `http://localhost:5000/node/${nodeIp}/domains/create/${domain.name}`
+  const API_URL = `http://localhost:5000/node/${nodeIp}/domains/destroy/${domain.name}`
   if (!nodeIp) return; // éviter les appels inutiles
   const res = await fetch(API_URL, { method: "GET" });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Erreur start domain: ${res.status} - ${text}`);
+    throw new Error(`Erreur stopping domain: ${res.status} - ${text}`);
   }
   return await res;
 }
