@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, Spinner, Alert } from "react-bootstrap";
 import DomainAccordion from "./DomainAccordion.jsx"
 import { GetNodeInfo } from "../functions/getNodeInfo.jsx";
@@ -6,21 +6,25 @@ import { GetDomainsInfo } from "../functions/getDomainsInfo.jsx";
 import { StartDomain } from "../functions/startDomain.jsx"
 export const NodeInfo = ({ nodeIp }) => {
   const { node, loading, error } = GetNodeInfo(nodeIp);
-  const { domains, loading: domainsLoading, error: domainsError } = GetDomainsInfo(nodeIp);
+  const { domains, loading: domainsLoading, error: domainsError, refetch} = GetDomainsInfo(nodeIp);
+  const [actionError, setActionError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const handleDomainStart = (domain) => {
-   try {
-      console.log("test")
-      console.log("node IP " + nodeIp)
-      console.log(JSON.stringify(domain.name))
-      const response = StartDomain(nodeIp, domain); 
-      console.log(response)
+  const handleDomainStart = async (domain) => {
+    setActionError(null);
+    setActionLoading(true);
+
+    try {
+      const result = await StartDomain(nodeIp, domain);
+      console.log("Start OK:", result);
+      await refetch();
+    } catch (err) {
+      console.error(err);
+      setActionError(err.message);
+    } finally {
+      setActionLoading(false);
     }
-    catch (err) {
-      console.log(err);
-    }
-   
-  }
+  };
 
   if (loading)
     return (
@@ -78,7 +82,19 @@ export const NodeInfo = ({ nodeIp }) => {
             <p className="text-muted">Aucun domaine trouvé pour ce node.</p>
           )}
 
-          
+ 
+      {actionError && (
+        <Alert variant="danger" className="mb-3">
+          Erreur : {actionError}
+        </Alert>
+      )}
+
+      {actionLoading && (
+        <div className="d-flex align-items-center mb-2">
+          <Spinner animation="border" size="sm" className="me-2" />
+          <span>Action en cours...</span>
+        </div>
+      )}
       {!domainsLoading && domains.length > 0 && (
         <DomainAccordion
           domains={domains}

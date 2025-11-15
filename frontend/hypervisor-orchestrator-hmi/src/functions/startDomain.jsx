@@ -1,24 +1,15 @@
 
 
-export function StartDomain(nodeIp, domain) {
+export async function StartDomain(nodeIp, domain) {
   console.log(domain)
-const API_URL = `http://localhost:5000/node/${nodeIp}/domains/create/${domain.name}`
-    if (!nodeIp) return; // éviter les appels inutiles
-    const fetchDomains = async () => {
-      try {
-        const res = await fetch(API_URL);
-        if (!res.ok) {
-          throw new Error(`Erreur HTTP : ${res.status}`);
-        }
-        const data = await res.json();
-        console.log("Domains fetched:", data);
-        return data;
-      } catch (err) {
-        console.error("Erreur GetDomains :", err);
-        return err;
-    };
+  const API_URL = `http://localhost:5000/node/${nodeIp}/domains/create/${domain.name}`
+  if (!nodeIp) return; // éviter les appels inutiles
+  const res = await fetch(API_URL, { method: "GET" });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Erreur start domain: ${res.status} - ${text}`);
   }
-  const response = fetchDomains();
-  return response
+  return await res;
 }
+
 
