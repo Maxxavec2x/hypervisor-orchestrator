@@ -36,13 +36,13 @@ def create_domain(conn, name):
     try:
         dom = conn.lookupByName(name)
         dom.create()
-        return make_response("<h1>Success</h1>", 200)
+        return make_response("Success", 200)
     except libvirt.libvirtError:
         print('libvirtError: Failed to create domain')
-        return make_response("<h1>libvirtError: Error when creating domain</h1>", 400)
+        return make_response("libvirtError: Error when creating domain", 400)
     except :
         print("Unknown error: Failed to create domain")
-        return make_response("<h1>Unknown: Error when creating domain</h1>", 400)
+        return make_response("Unknown: Error when creating domain", 400)
 
 # Shutdown a domain
 def destroy_domain(conn, name):

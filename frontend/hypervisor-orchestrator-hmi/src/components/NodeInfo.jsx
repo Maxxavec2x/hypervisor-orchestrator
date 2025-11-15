@@ -1,11 +1,30 @@
-import React from "react";
-import { Card, Spinner, Alert, Accordion } from "react-bootstrap";
+import React, { useState } from "react";
+import { Card, Spinner, Alert } from "react-bootstrap";
+import DomainAccordion from "./DomainAccordion.jsx"
 import { GetNodeInfo } from "../functions/getNodeInfo.jsx";
 import { GetDomainsInfo } from "../functions/getDomainsInfo.jsx";
-import {renderValue} from "../functions/renderValue.js";
+import { StartDomain } from "../functions/startDomain.jsx"
 export const NodeInfo = ({ nodeIp }) => {
   const { node, loading, error } = GetNodeInfo(nodeIp);
-  const { domains, loading: domainsLoading, error: domainsError } = GetDomainsInfo(nodeIp);
+  const { domains, loading: domainsLoading, error: domainsError, refetch} = GetDomainsInfo(nodeIp);
+  const [actionError, setActionError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const handleDomainStart = async (domain) => {
+    setActionError(null);
+    setActionLoading(true);
+
+    try {
+      const result = await StartDomain(nodeIp, domain);
+      console.log("Start OK:", result);
+      await refetch();
+    } catch (err) {
+      console.error(err);
+      setActionError(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (loading)
     return (
@@ -63,23 +82,26 @@ export const NodeInfo = ({ nodeIp }) => {
             <p className="text-muted">Aucun domaine trouvé pour ce node.</p>
           )}
 
-          
-      {!domainsLoading && domains.length > 0 && (
-      <Accordion defaultActiveKey="0">
-        {domains.map((domain, index) => (
-          <Accordion.Item eventKey={index.toString()} key={index}>
-            <Accordion.Header>{domain.name || `Domaine ${index + 1}`}</Accordion.Header>
-            <Accordion.Body>
-              {Object.entries(domain).map(([key, value]) => (
-                <div key={key} style={{ marginBottom: "0.5rem" }}>
-                  <strong>{key}:</strong> {renderValue(value)}
-                </div>
-              ))}
-            </Accordion.Body>
-          </Accordion.Item>
-        ))}
-      </Accordion>
+ 
+      {actionError && (
+        <Alert variant="danger" className="mb-3">
+          Erreur : {actionError}
+        </Alert>
       )}
+
+      {actionLoading && (
+        <div className="d-flex align-items-center mb-2">
+          <Spinner animation="border" size="sm" className="me-2" />
+          <span>Action en cours...</span>
+        </div>
+      )}
+      {!domainsLoading && domains.length > 0 && (
+        <DomainAccordion
+          domains={domains}
+          onDomainStart={(domain) => handleDomainStart(domain)}
+          onDomainStop={(domain) => console.log(domain)}
+        />
+)}
 
         </Card.Body>
       </Card>
