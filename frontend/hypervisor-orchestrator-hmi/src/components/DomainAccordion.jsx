@@ -1,7 +1,7 @@
 
 import { Accordion, Button, ButtonGroup } from "react-bootstrap";
 import {renderValue} from "../functions/renderValue.js"
-function DomainAccordion({ domains, onDomainStart, ononDomainStop }) {
+function DomainAccordion({ domains, onDomainStart, onDomainStop }) {
   return (
     <Accordion defaultActiveKey="0">
       {domains.map((domain, index) => (
@@ -20,7 +20,7 @@ function DomainAccordion({ domains, onDomainStart, ononDomainStop }) {
                 </Button>
                 <Button
                   variant="outline-danger"
-                  onClick={() => ononDomainStop(domain)}
+                  onClick={() => onDomainStop(domain)}
                 >
                   Stop
                 </Button>

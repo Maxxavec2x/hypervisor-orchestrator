@@ -4,6 +4,8 @@ import DomainAccordion from "./DomainAccordion.jsx"
 import { GetNodeInfo } from "../functions/getNodeInfo.jsx";
 import { GetDomainsInfo } from "../functions/getDomainsInfo.jsx";
 import { StartDomain } from "../functions/startDomain.jsx"
+import { StopDomain } from "../functions/stopDomain.jsx"
+
 export const NodeInfo = ({ nodeIp }) => {
   const { node, loading, error } = GetNodeInfo(nodeIp);
   const { domains, loading: domainsLoading, error: domainsError, refetch} = GetDomainsInfo(nodeIp);
@@ -26,6 +28,19 @@ export const NodeInfo = ({ nodeIp }) => {
     }
   };
 
+  const handleDomainStop = async (domain) => {
+      setActionError(null);
+      setActionLoading(true);
+
+      try {
+        await StopDomain(nodeIp, domain);
+        await refetch();
+      } catch (err) {
+        setActionError(err.message);
+      } finally {
+        setActionLoading(false);
+      }
+   };
   if (loading)
     return (
       <Card className="mb-3 shadow-sm">
@@ -99,7 +114,7 @@ export const NodeInfo = ({ nodeIp }) => {
         <DomainAccordion
           domains={domains}
           onDomainStart={(domain) => handleDomainStart(domain)}
-          onDomainStop={(domain) => console.log(domain)}
+          onDomainStop={(domain) => handleDomainStop(domain)}
         />
 )}
 
