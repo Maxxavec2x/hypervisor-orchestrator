@@ -5,6 +5,7 @@ import { GetNodeInfo } from "../functions/getNodeInfo.jsx";
 import { GetDomainsInfo } from "../functions/getDomainsInfo.jsx";
 import { StartDomain } from "../functions/startDomain.jsx"
 import { StopDomain } from "../functions/stopDomain.jsx"
+import { RemoveDomain } from "../functions/removeDomain.jsx"
 
 export const NodeInfo = ({ nodeIp }) => {
   const { node, loading, error } = GetNodeInfo(nodeIp);
@@ -12,28 +13,12 @@ export const NodeInfo = ({ nodeIp }) => {
   const [actionError, setActionError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const handleDomainStart = async (domain) => {
-    setActionError(null);
-    setActionLoading(true);
-
-    try {
-      const result = await StartDomain(nodeIp, domain);
-      console.log("Start OK:", result);
-      await refetch();
-    } catch (err) {
-      console.error(err);
-      setActionError(err.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDomainStop = async (domain) => {
+  const handleDomainAction = async (action, domain) => {
       setActionError(null);
       setActionLoading(true);
 
       try {
-        await StopDomain(nodeIp, domain);
+        await action(nodeIp, domain);
         await refetch();
       } catch (err) {
         setActionError(err.message);
@@ -41,6 +26,7 @@ export const NodeInfo = ({ nodeIp }) => {
         setActionLoading(false);
       }
    };
+
   if (loading)
     return (
       <Card className="mb-3 shadow-sm">
@@ -113,8 +99,9 @@ export const NodeInfo = ({ nodeIp }) => {
       {!domainsLoading && domains.length > 0 && (
         <DomainAccordion
           domains={domains}
-          onDomainStart={(domain) => handleDomainStart(domain)}
-          onDomainStop={(domain) => handleDomainStop(domain)}
+          onDomainStart={(domain) => handleDomainAction(StartDomain,domain)}
+          onDomainStop={(domain) => handleDomainAction(StopDomain,domain)}
+          onDomainRemoval={(domain) => handleDomainAction(RemoveDomain,domain)}
         />
 )}
 
