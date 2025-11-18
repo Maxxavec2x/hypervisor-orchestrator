@@ -5,6 +5,7 @@ import { GetNodeInfo } from "../functions/getNodeInfo.jsx";
 import { GetDomainsInfo } from "../functions/getDomainsInfo.jsx";
 import { StartDomain } from "../functions/startDomain.jsx"
 import { StopDomain } from "../functions/stopDomain.jsx"
+import { RemoveDomain } from "../functions/removeDomain.jsx"
 
 export const NodeInfo = ({ nodeIp }) => {
   const { node, loading, error } = GetNodeInfo(nodeIp);
@@ -41,6 +42,22 @@ export const NodeInfo = ({ nodeIp }) => {
         setActionLoading(false);
       }
    };
+
+  const handleDomainRemoval = async (domain) => {
+      setActionError(null);
+      setActionLoading(true);
+
+      try {
+        await RemoveDomain(nodeIp, domain);
+        await refetch();
+      } catch (err) {
+        setActionError(err.message);
+      } finally {
+        setActionLoading(false);
+      }
+   };
+
+
   if (loading)
     return (
       <Card className="mb-3 shadow-sm">
@@ -115,6 +132,7 @@ export const NodeInfo = ({ nodeIp }) => {
           domains={domains}
           onDomainStart={(domain) => handleDomainStart(domain)}
           onDomainStop={(domain) => handleDomainStop(domain)}
+          onDomainRemoval={(domain) => handleDomainRemoval(domain)}
         />
 )}
 
