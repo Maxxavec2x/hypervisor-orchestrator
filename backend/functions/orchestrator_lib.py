@@ -62,7 +62,6 @@ def undefine_domain(conn, name):
     # Don't delete the VM disk - Error if found an external snapshot (libvirt can't delete it: https://wiki.libvirt.org/I_created_an_external_snapshot_but_libvirt_will_not_let_me_delete_or_revert_to_it.html)
     try:
         dom = conn.lookupByName(name)
-
         flags = libvirt.VIR_DOMAIN_UNDEFINE_NVRAM
         if dom.hasManagedSaveImage():
             flags ^= libvirt.VIR_DOMAIN_UNDEFINE_MANAGED_SAVE
@@ -74,6 +73,7 @@ def undefine_domain(conn, name):
             flags ^= libvirt.VIR_DOMAIN_UNDEFINE_CHECKPOINTS_METADATA
         
         dom.undefineFlags(flags)
+        destroy_domain(conn, name)
         return make_response("<h1>Success</h1>", 200)
 
     except libvirt.libvirtError:
@@ -99,21 +99,42 @@ def get_snapshot_name_domain(conn, name):
 
 def defineXML_domain(conn, request):
     # WARNING: Override existing domain with same UUID and name ! Can be used to update a Domain
+    # TODO: Fonction pour créer un disque - TO CHECK
     try:
         domain_name = request.form['domain_name']
         cpu_allocated = request.form['cpu_allocated']
         ram_allocated = request.form['ram_allocated']
+        disk_path = request.form['disk_path'] # Besoin d'autre chose que le path pour le disque ???
+        iso_path = request.form['iso_path']
         vm_xml_description = f'''
         <domain type='kvm' id='40'>
             <name>{domain_name}</name>
-            <uuid>4dea22b3-1d52-d8f3-2516-782e98ab3fa0</uuid>
             <memory unit='KiB'>{ram_allocated}</memory>
             <currentMemory unit='KiB'>{ram_allocated}</currentMemory>
             <vcpu placement='static'>{cpu_allocated}</vcpu>
             <os>
-                <type arch='x86_64' machine='pc-q35-10.0'>hvm</type>
+                <type arch='x86_64'>hvm</type>
+                <boot dev='cdrom'/>
                 <boot dev='hd'/>
             </os>
+            <devices>
+                <emulator>/usr/bin/qemu-system-x86_64</emulator>
+                <disk type='file' device='disk'>
+                    <driver name='qemu' type='qcow2'/>
+                    <source file='{disk_path}' index='2' />
+                    <target dev='vda' bus='virtio'/>
+                </disk>
+                <disk type='file' device='cdrom'>
+                    <driver name='qemu' type='raw' index='1' />
+                    <source file='{iso_path}'/>
+                    <target dev='sda' bus='sata' />
+                    <readonly/>
+                </disk>
+                <graphics type='vnc' port='5900' autoport='yes' listen='127.0.0.1'>
+                    <listen type='address' address='127.0.0.1'/>
+                </graphics>
+                <audio id='1' type='none'/>
+            </devices>
         </domain>
         '''
         conn.defineXML(vm_xml_description)
@@ -121,4 +142,5 @@ def defineXML_domain(conn, request):
     except libvirt.libvirtError:
         return make_response("<h1>libvirtError: Error when defining domain</h1>", 400)
     except Exception as e:
+        print(e)
         return make_response("<h1>Unknown: Error when defining domain</h1>", 400)

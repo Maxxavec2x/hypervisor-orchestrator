@@ -43,7 +43,6 @@ def get_snapshot_name_domain_endpoint(ip, name):
     # TODO: Voir Maxx le format du retour
     return jsonify(snapshot_dict)
 
-# TODO: changer to post
 @app.route("/node/<ip>/domains/defineXML", methods=['POST'])
 def defineXML_domain_endpoint(ip):
     return defineXML_domain(get_connector_to_node(ip), request)
