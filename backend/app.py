@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import json
 from pprint import pprint
 from functions.orchestrator_lib import *
@@ -43,6 +43,9 @@ def get_snapshot_name_domain_endpoint(ip, name):
     # TODO: Voir Maxx le format du retour
     return jsonify(snapshot_dict)
 
+@app.route("/node/<ip>/domains/defineXML", methods=['POST'])
+def defineXML_domain_endpoint(ip):
+    return defineXML_domain(get_connector_to_node(ip), request)
 
 # Pour les tests
 if __name__ == '__main__':
@@ -51,3 +54,5 @@ if __name__ == '__main__':
     #get_node_info_endpoint("localhost")
     pprint(get_all_domains_info_endpoint("localhost"))
 
+
+# TODO: METTRE DES COMMENTAIRES
