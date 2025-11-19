@@ -4,6 +4,8 @@ import libvirt
 import sys
 from objects.DomainInfo import DomainInfo
 from flask import make_response
+import subprocess
+import xml.etree.ElementTree as ET
 
 # Take an ip of an hypervisor and return the connector to it
 def get_connector_to_node(ip):
@@ -28,7 +30,11 @@ def get_all_domain_info(conn):
     domains = []
     domainsInfos = conn.getAllDomainStats()
     for domain in domainsInfos:
-       domains.append(DomainInfo(domain[0], domain[1]))
+        newDomain = DomainInfo(domain[0], domain[1])
+        print("STATE :",newDomain.state)
+        if newDomain.state == "Running": # Si on refetch et que le domain run, on ajoute le port du websocket
+            newDomain.set_ws_port(start_vnc_websocket(conn, newDomain.name()))
+        domains.append(newDomain)
     return domains
 
 # Starting a existing domain
@@ -43,6 +49,35 @@ def create_domain(conn, name):
     except :
         print("Unknown error: Failed to create domain")
         return make_response("Unknown: Error when creating domain", 400)
+
+# IL FAUT QUE LA VM SOIT CREER AVEC VNC ET PAS SPICE !!!!!!
+def start_vnc_websocket(conn, name):
+    print("Tentative de création d'un websocket")
+    try:
+        dom = conn.lookupByName(name)
+        xml_desc = dom.XMLDesc()
+        print(xml_desc)
+        root = ET.fromstring(xml_desc)
+        graphics = root.find("./devices/graphics[@type='vnc']")
+        if graphics is None:
+            print("Aucun device VNC trouvé dans le XML. Tentative de récupérer via dom.displayPort()")
+            vnc_port = dom.displayPort()
+        else :
+            vnc_port = int(graphics.attrib.get('port', -1))
+            if vnc_port == -1:
+                vnc_port = dom.displayPort()
+        ws_port = 6080
+        print(f"Tentative de faire un subprocess avec ws_port: {ws_port} et vnc_port : {vnc_port}")
+        subprocess.Popen([
+            "websockify",
+            str(ws_port),
+            f"0.0.0.0:{vnc_port}"
+        ])
+        return ws_port
+    except Exception as e:
+        print(f"Erreur setting websocket : {e}")
+        return str(None)
+
 
 # Shutdown a domain
 def destroy_domain(conn, name):
@@ -97,6 +132,8 @@ def get_snapshot_name_domain(conn, name):
     except Exception as e:
         return make_response("<h1>Unknown: Error when getting snapshot</h1>", 400)
 
+
+# Permet de créer une nouvelle vm
 def defineXML_domain(conn, request):
     # WARNING: Override existing domain with same UUID and name ! Can be used to update a Domain
     # TODO: Fonction pour créer un disque - TO CHECK
@@ -130,8 +167,8 @@ def defineXML_domain(conn, request):
                     <target dev='sda' bus='sata' />
                     <readonly/>
                 </disk>
-                <graphics type='vnc' port='5900' autoport='yes' listen='127.0.0.1'>
-                    <listen type='address' address='127.0.0.1'/>
+                <graphics type='vnc' port='5900' autoport='yes' listen='0.0.0.0'>
+                    <listen type='address' address='0.0.0.0'/>
                 </graphics>
                 <audio id='1' type='none'/>
             </devices>
