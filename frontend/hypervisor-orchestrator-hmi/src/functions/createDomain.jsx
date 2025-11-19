@@ -1,5 +1,5 @@
 export async function CreateDomain(nodeIp, formData) {
-  const API_URL = `http://${nodeIp}:5000/domain/create`;
+  const API_URL = `http://localhost:5000/node/${nodeIp}/domains/defineXML`;
 
   const res = await fetch(API_URL, {
     method: "POST",
