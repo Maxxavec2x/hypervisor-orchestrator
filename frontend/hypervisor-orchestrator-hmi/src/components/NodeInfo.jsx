@@ -1,17 +1,32 @@
 import React, { useState } from "react";
-import { Card, Spinner, Alert } from "react-bootstrap";
+import { Card, Spinner, Alert, Button } from "react-bootstrap";
 import DomainAccordion from "./DomainAccordion.jsx"
+import CreateDomainModal from "./CreateDomainModal.jsx";
+
 import { GetNodeInfo } from "../functions/getNodeInfo.jsx";
 import { GetDomainsInfo } from "../functions/getDomainsInfo.jsx";
 import { StartDomain } from "../functions/startDomain.jsx"
 import { StopDomain } from "../functions/stopDomain.jsx"
 import { RemoveDomain } from "../functions/removeDomain.jsx"
+import { CreateDomain } from "../functions/createDomain.jsx";
 
 export const NodeInfo = ({ nodeIp }) => {
   const { node, loading, error } = GetNodeInfo(nodeIp);
   const { domains, loading: domainsLoading, error: domainsError, refetch} = GetDomainsInfo(nodeIp);
   const [actionError, setActionError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({
+    domain_name: "",
+    cpu_allocated: "",
+    ram_allocated: "",
+    disk_path: "",
+    iso_path: ""
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleDomainAction = async (action, domain) => {
       setActionError(null);
@@ -26,6 +41,34 @@ export const NodeInfo = ({ nodeIp }) => {
         setActionLoading(false);
       }
    };
+
+  const handleCreateDomain = async () => {
+    setActionError(null);
+    setActionLoading(true);
+
+    try {
+      const formData = new FormData();
+      for (let key in form) {
+        formData.append(key, form[key]);
+      }
+
+      await CreateDomain(nodeIp, formData);
+      await refetch();
+
+      setShowModal(false);
+      setForm({
+        domain_name: "",
+        cpu_allocated: "",
+        ram_allocated: "",
+        disk_path: "",
+        iso_path: ""
+      });
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (loading)
     return (
@@ -50,6 +93,9 @@ export const NodeInfo = ({ nodeIp }) => {
       <Card className="mb-3 shadow-sm">
         <Card.Header>
           <strong>Node IP :</strong> {nodeIp}
+        <Button variant="primary" className="float-end" onClick={() => setShowModal(true)}>
+          + Créer un domaine
+        </Button>
         </Card.Header>
         <Card.Body>
           {Object.entries(node).map(([key, value]) => (
@@ -107,6 +153,16 @@ export const NodeInfo = ({ nodeIp }) => {
 
         </Card.Body>
       </Card>
+
+    <CreateDomainModal
+      show={showModal}
+      onClose={() => setShowModal(false)}
+      onSubmit={handleCreateDomain}
+      form={form}
+      onChange={handleChange}
+      loading={actionLoading}
+      error={actionError}
+    />
     </>
   );
 };
