@@ -6,6 +6,17 @@ from objects.DomainInfo import DomainInfo
 from flask import make_response
 import subprocess
 import xml.etree.ElementTree as ET
+import socket
+
+websockify_processes = {}  # key = VM name, value = process
+
+def find_free_port(start=7000, end=9000):
+    for port in range(start, end):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            if s.connect_ex(("0.0.0.0", port)) != 0:
+                return port
+    raise RuntimeError("No free ports available")
+
 
 # Take an ip of an hypervisor and return the connector to it
 def get_connector_to_node(ip):
@@ -66,13 +77,14 @@ def start_vnc_websocket(conn, name):
             vnc_port = int(graphics.attrib.get('port', -1))
             if vnc_port == -1:
                 vnc_port = dom.displayPort()
-        ws_port = 6080
+        ws_port = find_free_port()
         print(f"Tentative de faire un subprocess avec ws_port: {ws_port} et vnc_port : {vnc_port}")
-        subprocess.Popen([
+        process = subprocess.Popen([
             "websockify",
             str(ws_port),
             f"0.0.0.0:{vnc_port}"
         ])
+        websockify_processes[name] = process
         return ws_port
     except Exception as e:
         print(f"Erreur setting websocket : {e}")
@@ -84,6 +96,16 @@ def destroy_domain(conn, name):
     try:
         dom = conn.lookupByName(name)
         dom.destroy()
+        try:
+            print(f"VM {name} eteinte : arrêt du websockify.")
+            process = websockify_processes.get(name)
+            if process:
+                process.terminate()
+                process.wait()
+                del websockify_processes[name]
+                print(f"Process websockify arrêté pour VM {name}")
+        except Exception as e:
+            print(f"error stopping websocket : {e}")
         return make_response("<h1>Success</h1>", 200)
     except libvirt.libvirtError:
         print('libvirtError: Failed to destroy domain')

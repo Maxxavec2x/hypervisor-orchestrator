@@ -46,7 +46,7 @@ export const NodeInfo = ({ nodeIp }) => {
    };
 
   const handleOpenVnc = (domain) => {
-    const url = `ws://${nodeIp}:6080`;
+    const url = `ws://${nodeIp}:${domain.ws_port}`;
     setVncUrl(url);
     setShowVnc(true);
   };
