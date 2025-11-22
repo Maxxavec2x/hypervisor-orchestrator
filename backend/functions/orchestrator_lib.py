@@ -157,6 +157,27 @@ def get_snapshot_name_domain(conn, name):
         return make_response("<h1>Unknown: Error when getting snapshot</h1>", 400)
 
 UPLOAD_FOLDER = "/home/maxx/iso/iso-imported" # A voir pour chopper le pool pour les iso ou un truc comme ça 
+def getStoragePool(conn):
+    try:
+        pool = conn.storagePoolLookupByName("default")
+        return pool
+    except libvirt.libvirtError:
+        raise make_response("<h1>Erreur : la storage pool 'default' est introuvable.<h1>", 400)
+
+def createStoragePoolVolume(pool, name):    
+        vol_xml = f"""
+        <volume>
+          <name>disk_{name}.qcow2</name>
+          <allocation>0</allocation>
+          <capacity unit="G">20</capacity>
+          <target>
+            <format type="qcow2"/>
+          </target>
+        </volume>"""
+
+        new_vol = pool.createXML(vol_xml, 0)   
+        return new_vol.path()
+
 # Permet de créer une nouvelle vm
 def defineXML_domain(conn, request):
     # WARNING: Override existing domain with same UUID and name ! Can be used to update a Domain
@@ -167,8 +188,8 @@ def defineXML_domain(conn, request):
         domain_name = request.form['domain_name']
         cpu_allocated = request.form['cpu_allocated']
         ram_allocated = request.form['ram_allocated']
-        disk_path = request.form.get('disk_path', None) # Besoin d'autre chose que le path pour le disque ???
-        
+        disk_path = request.form.get('disk_path', None) #Par défaut on pars du principe que le disque n'existe pas
+        print("disk path : ", disk_path)
         #Gestion upload iso :
         iso_file = request.files.get('iso_file')
         if iso_file:
@@ -178,6 +199,14 @@ def defineXML_domain(conn, request):
             iso_path = save_path
         else:
             iso_path = None
+
+        #Gestion des disques
+        if not disk_path:
+            print("ENTREE DANS LE IF: ")
+            pool = getStoragePool(conn)
+            disk_path = createStoragePoolVolume(pool,domain_name)
+        
+        print("Fin de la configuration :")
 
         vm_xml_description = f'''
         <domain type='kvm' id='40'>
@@ -210,6 +239,7 @@ def defineXML_domain(conn, request):
             </devices>
         </domain>
         '''
+        getStoragePool(conn)
         conn.defineXML(vm_xml_description)
         return make_response("Success", 200)
     except libvirt.libvirtError as e:
