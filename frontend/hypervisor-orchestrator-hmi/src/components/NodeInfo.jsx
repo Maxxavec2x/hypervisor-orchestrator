@@ -21,6 +21,7 @@ export const NodeInfo = ({ nodeIp }) => {
     domain_name: "",
     cpu_allocated: "",
     ram_allocated: "",
+    use_disk : false,
     disk_path: "",
     iso_path: ""
   });
@@ -59,7 +60,7 @@ export const NodeInfo = ({ nodeIp }) => {
       const formData = new FormData();
       for (let key in form) {
         console.log("KEY: ", key)
-        if (key == "ram_allocated") {
+        if (key === "ram_allocated") {
           form["ram_allocated"] *= 1000 // Un peu dégueu, mais l'api demande une quantitée de ram en KiB MDRRRRRRRR
         }
         formData.append(key, form[key]);
@@ -82,6 +83,15 @@ export const NodeInfo = ({ nodeIp }) => {
       setActionLoading(false);
     }
   };
+
+  const onDiskToggle = (checked) => {
+    setForm({ ...form, use_disk: checked });
+
+    if (!checked) {
+      setForm((prev) => ({ ...prev, disk_path: "" }));
+    }
+  };
+
 
   if (loading)
     return (
@@ -176,6 +186,7 @@ export const NodeInfo = ({ nodeIp }) => {
       onChange={handleChange}
       loading={actionLoading}
       error={actionError}
+      onDiskToggle={onDiskToggle}
     />
     <VncViewerModal
       show={showVnc}
