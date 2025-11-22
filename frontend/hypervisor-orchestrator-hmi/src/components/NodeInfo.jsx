@@ -23,7 +23,8 @@ export const NodeInfo = ({ nodeIp }) => {
     ram_allocated: "",
     use_disk : false,
     disk_path: "",
-    iso_path: ""
+    iso_path: "",
+    iso_file : null
   });
   const [showVnc, setShowVnc] = useState(false);
   const [vncUrl, setVncUrl] = useState(null);
@@ -73,8 +74,10 @@ export const NodeInfo = ({ nodeIp }) => {
         domain_name: "",
         cpu_allocated: "",
         ram_allocated: "",
+        use_disk : false,
         disk_path: "",
-        iso_path: ""
+        iso_path: "",
+        iso_file : null
       });
     } catch (err) {
       setActionError(err.message);
@@ -91,6 +94,15 @@ export const NodeInfo = ({ nodeIp }) => {
     }
   };
 
+
+  const onIsoFileSelected = (e) => {
+    const file = e.target.files[0];
+    setForm((prev) => ({
+      ...prev,
+      iso_file: file,
+      iso_path: file ? file.name : ""
+    }));
+};
 
   if (loading)
     return (
@@ -186,6 +198,7 @@ export const NodeInfo = ({ nodeIp }) => {
       loading={actionLoading}
       error={actionError}
       onDiskToggle={onDiskToggle}
+      onIsoFileSelected={onIsoFileSelected}
     />
     <VncViewerModal
       show={showVnc}

@@ -8,6 +8,8 @@ import subprocess
 import xml.etree.ElementTree as ET
 import socket
 from contextlib import closing
+from werkzeug.utils import secure_filename
+import os
 
 
 websockify_processes = {}  # key = VM name, value = process
@@ -154,17 +156,29 @@ def get_snapshot_name_domain(conn, name):
     except Exception as e:
         return make_response("<h1>Unknown: Error when getting snapshot</h1>", 400)
 
-
+UPLOAD_FOLDER = "/home/maxx/iso/iso-imported" # A voir pour chopper le pool pour les iso ou un truc comme ça 
 # Permet de créer une nouvelle vm
 def defineXML_domain(conn, request):
     # WARNING: Override existing domain with same UUID and name ! Can be used to update a Domain
     # TODO: Fonction pour créer un disque - TO CHECK
+
+    print("Création d'une nouvelle VM ")
     try:
         domain_name = request.form['domain_name']
         cpu_allocated = request.form['cpu_allocated']
         ram_allocated = request.form['ram_allocated']
-        disk_path = request.form['disk_path'] # Besoin d'autre chose que le path pour le disque ???
-        iso_path = request.form['iso_path']
+        disk_path = request.form.get('disk_path', None) # Besoin d'autre chose que le path pour le disque ???
+        
+        #Gestion upload iso :
+        iso_file = request.files.get('iso_file')
+        if iso_file:
+            filename = secure_filename(iso_file.filename)
+            save_path = os.path.join(UPLOAD_FOLDER, filename)
+            iso_file.save(save_path)   # on sauvegarde l'iso
+            iso_path = save_path
+        else:
+            iso_path = None
+
         vm_xml_description = f'''
         <domain type='kvm' id='40'>
             <name>{domain_name}</name>
@@ -197,9 +211,9 @@ def defineXML_domain(conn, request):
         </domain>
         '''
         conn.defineXML(vm_xml_description)
-        return make_response("<h1>Success</h1>", 200)
-    except libvirt.libvirtError:
-        return make_response("<h1>libvirtError: Error when defining domain</h1>", 400)
+        return make_response("Success", 200)
+    except libvirt.libvirtError as e:
+        return make_response(f"libvirtError: Error when defining domain : {e}", 400)
     except Exception as e:
         print(e)
-        return make_response("<h1>Unknown: Error when defining domain</h1>", 400)
+        return make_response("Unknown: Error when defining domain", 400)
