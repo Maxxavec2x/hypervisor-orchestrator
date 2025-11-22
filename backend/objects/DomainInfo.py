@@ -1,3 +1,4 @@
+import xml.etree.ElementTree as ET
 class DomainInfo:
     """A class to encapsulate information about a libvirt domain."""
     
@@ -29,6 +30,7 @@ class DomainInfo:
         self.vcpu_current = stats.get("vcpu.current", 0)
         self.vcpu_maximum = stats.get("vcpu.maximum", 0)
         self.block_count = stats.get("block.count", 0)
+        self.ws_port = None # Par défaut, pas de port de websocket
 
         # Block device attributes (stored as dictionaries in a list)
         self.block_devices = []
@@ -42,11 +44,23 @@ class DomainInfo:
                 "physical": stats.get(f"{block_prefix}physical")
             }
             self.block_devices.append(block_info)
-
+        #Récupération du port VNC (par défaut 5900; mais de toute façon on va utiliser websockify pour ouvrir un websocket sur un autre port):
+        self.vnc_port = None
+        try:
+            xml_desc = domain.XMLDesc()
+            root = ET.fromstring(xml_desc)
+            graphics = root.find("./devices/graphics[@type='vnc']")
+            if graphics is not None:
+                port = graphics.get("port")
+                if port and port != "-1":
+                    self.vnc_port = int(port)
+        except Exception as e:
+            self.vnc_port = None
     def domain(self):
         """Get the underlying virDomain object."""
         return self._domain
-
+    def set_ws_port(self, ws_port):
+        self.ws_port = ws_port
     def name(self):
         """Get the domain name."""
         return self._domain.name()
@@ -86,4 +100,6 @@ class DomainInfo:
                 "maximum": self.vcpu_maximum,
             },
             "block_devices": self.block_devices,
+            "vnc_port": self.vnc_port,
+            "ws_port": self.ws_port,
         }
