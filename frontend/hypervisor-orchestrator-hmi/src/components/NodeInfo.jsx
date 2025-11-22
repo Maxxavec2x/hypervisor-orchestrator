@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, Spinner, Alert, Button } from "react-bootstrap";
 import DomainAccordion from "./DomainAccordion.jsx"
 import CreateDomainModal from "./CreateDomainModal.jsx";
+import VncViewerModal from "./VncViewerModal.jsx";
 
 import { GetNodeInfo } from "../functions/getNodeInfo.jsx";
 import { GetDomainsInfo } from "../functions/getDomainsInfo.jsx";
@@ -23,6 +24,8 @@ export const NodeInfo = ({ nodeIp }) => {
     disk_path: "",
     iso_path: ""
   });
+  const [showVnc, setShowVnc] = useState(false);
+  const [vncUrl, setVncUrl] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -41,6 +44,12 @@ export const NodeInfo = ({ nodeIp }) => {
         setActionLoading(false);
       }
    };
+
+  const handleOpenVnc = (domain) => {
+    const url = `ws://${nodeIp}:${domain.ws_port}`;
+    setVncUrl(url);
+    setShowVnc(true);
+  };
 
   const handleCreateDomain = async () => {
     setActionError(null);
@@ -148,6 +157,7 @@ export const NodeInfo = ({ nodeIp }) => {
           onDomainStart={(domain) => handleDomainAction(StartDomain,domain)}
           onDomainStop={(domain) => handleDomainAction(StopDomain,domain)}
           onDomainRemoval={(domain) => handleDomainAction(RemoveDomain,domain)}
+          onOpenVnc={handleOpenVnc}
         />
 )}
 
@@ -162,6 +172,11 @@ export const NodeInfo = ({ nodeIp }) => {
       onChange={handleChange}
       loading={actionLoading}
       error={actionError}
+    />
+    <VncViewerModal
+      show={showVnc}
+      onClose={() => setShowVnc(false)}
+      url={vncUrl}
     />
     </>
   );
