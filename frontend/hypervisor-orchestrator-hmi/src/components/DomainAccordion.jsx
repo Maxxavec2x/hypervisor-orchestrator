@@ -3,7 +3,7 @@ import { Accordion, Button, ButtonGroup } from "react-bootstrap";
 import {renderValue} from "../functions/renderValue.js"
 function DomainAccordion({ domains, onDomainStart, onDomainStop, onDomainRemoval, onOpenVnc }) {
   return (
-    <Accordion defaultActiveKey="0">
+    <Accordion>
       {domains.map((domain, index) => (
         <Accordion.Item eventKey={index.toString()} key={index}>
           <Accordion.Header>
