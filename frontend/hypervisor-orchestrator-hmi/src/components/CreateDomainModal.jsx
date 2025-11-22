@@ -7,29 +7,13 @@ const CreateDomainModal = ({
   onSubmit,
   form,
   onChange,
+  onDiskToggle,
+  onIsoFileSelected,
   loading,
-  error,
-  onDiskToggle
+  error
 }) => {
-  const fileInputRef = useRef(null);
 
-  const handleBrowseClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileSelected = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      onChange({
-        target: {
-          name: "disk_path",
-          value: file.path || file.name
-        }
-      });
-    }
-  };
+  const isoInputRef = useRef(null);
 
   return (
     <Modal show={show} onHide={onClose}>
@@ -69,40 +53,47 @@ const CreateDomainModal = ({
             />
           </Form.Group>
 
-          {/* === Checkbox pour activer/désactiver le disque === */}
+          {/* Checkbox pour activer/désactiver le disque */}
           <Form.Group className="mb-3">
             <Form.Check
               type="checkbox"
-              label="Utiliser un disque existant" 
+              label="Utiliser un disque existant"
               checked={form.use_disk}
-              onChange={(e) =>
-                onDiskToggle(e.target.checked)
-              }
+              onChange={(e) => onDiskToggle(e.target.checked)}
             />
           </Form.Group>
 
-          {/* === Champ du disque si la checkbox est cochée === */}
+          {/* Champ du disque si checkbox cochée */}
           {form.use_disk && (
             <Form.Group className="mb-3">
               <Form.Label>Chemin disque</Form.Label>
-              <div className="d-flex gap-2">
-                <Form.Control
-                  name="disk_path"
-                  value={form.disk_path}
-                  onChange={onChange}
-                />
-              </div>
+              <Form.Control
+                name="disk_path"
+                value={form.disk_path}
+                onChange={onChange}
+              />
             </Form.Group>
           )}
 
+          {/* Sélecteur ISO */}
           <Form.Group className="mb-3">
-            <Form.Label>Chemin ISO</Form.Label>
+            <Form.Label>Fichier ISO</Form.Label>
+
             <Form.Control
-              name="iso_path"
-              value={form.iso_path}
-              onChange={onChange}
+              type="file"
+              accept=".iso"
+              ref={isoInputRef}
+              onChange={onIsoFileSelected}
             />
+
+            {/* Si ISO sélectionné → afficher son nom */}
+            {form.iso_file && (
+              <small className="text-muted">
+                Fichier sélectionné : {form.iso_file.name}
+              </small>
+            )}
           </Form.Group>
+
         </Form>
 
         {error && <Alert variant="danger" className="mt-3">{error}</Alert>}

@@ -43,7 +43,6 @@ def get_all_domain_info(conn):
     domainsInfos = conn.getAllDomainStats()
     for domain in domainsInfos:
         newDomain = DomainInfo(domain[0], domain[1])
-        print("STATE :",newDomain.state)
         if newDomain.state == "Running": # Si on refetch et que le domain run, on ajoute le port du websocket
             newDomain.set_ws_port(start_vnc_websocket(conn, newDomain.name()))
         domains.append(newDomain)
