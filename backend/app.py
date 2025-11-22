@@ -53,6 +53,7 @@ if __name__ == '__main__':
     #help(libvirt)
     #get_node_info_endpoint("localhost")
     pprint(get_all_domains_info_endpoint("localhost"))
+    
 
 
 # TODO: METTRE DES COMMENTAIRES

@@ -97,6 +97,28 @@ def get_snapshot_name_domain(conn, name):
     except Exception as e:
         return make_response("<h1>Unknown: Error when getting snapshot</h1>", 400)
 
+def getStoragePool(conn):
+    try:
+        pool = conn.storagePoolLookupByName("default")
+        return pool
+    except libvirt.libvirtError:
+        raise make_response("<h1>Erreur : la storage pool 'default' est introuvable.<h1>", 400)
+
+def createStoragePoolVolume(pool, name):    
+        vol_xml = f"""
+        <volume>
+          <name>disk_{name}.qcow2</name>
+          <allocation>0</allocation>
+          <capacity unit="G">20</capacity>
+          <target>
+            <format type="qcow2"/>
+          </target>
+        </volume>"""
+
+        new_vol = pool.createXML(vol_xml, 0)   
+        return new_vol.path()
+
+
 def defineXML_domain(conn, request):
     # WARNING: Override existing domain with same UUID and name ! Can be used to update a Domain
     # TODO: Fonction pour créer un disque - TO CHECK
@@ -106,6 +128,8 @@ def defineXML_domain(conn, request):
         ram_allocated = request.form['ram_allocated']
         disk_path = request.form['disk_path'] # Besoin d'autre chose que le path pour le disque ???
         iso_path = request.form['iso_path']
+        pool = getStoragePool(conn)
+        vol_path=createStoragePoolVolume(pool,domain_name)
         vm_xml_description = f'''
         <domain type='kvm' id='40'>
             <name>{domain_name}</name>
@@ -121,7 +145,7 @@ def defineXML_domain(conn, request):
                 <emulator>/usr/bin/qemu-system-x86_64</emulator>
                 <disk type='file' device='disk'>
                     <driver name='qemu' type='qcow2'/>
-                    <source file='{disk_path}' index='2' />
+                    <source file='{vol_path}' index='2' />
                     <target dev='vda' bus='virtio'/>
                 </disk>
                 <disk type='file' device='cdrom'>
@@ -137,6 +161,7 @@ def defineXML_domain(conn, request):
             </devices>
         </domain>
         '''
+        getStoragePool(conn)
         conn.defineXML(vm_xml_description)
         return make_response("<h1>Success</h1>", 200)
     except libvirt.libvirtError:
