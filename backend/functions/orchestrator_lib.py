@@ -7,15 +7,16 @@ from flask import make_response
 import subprocess
 import xml.etree.ElementTree as ET
 import socket
+from contextlib import closing
+
 
 websockify_processes = {}  # key = VM name, value = process
 
-def find_free_port(start=7000, end=9000):
-    for port in range(start, end):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            if s.connect_ex(("0.0.0.0", port)) != 0:
-                return port
-    raise RuntimeError("No free ports available")
+def find_free_port():
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
 
 # Take an ip of an hypervisor and return the connector to it
