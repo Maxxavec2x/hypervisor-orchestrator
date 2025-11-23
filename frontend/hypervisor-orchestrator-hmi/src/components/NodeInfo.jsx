@@ -60,9 +60,6 @@ export const NodeInfo = ({ nodeIp }) => {
     try {
       const formData = new FormData();
       for (let key in form) {
-        if (key === "ram_allocated") {
-          form["ram_allocated"] *= 1000 // Un peu dégueu, mais l'api demande une quantitée de ram en KiB MDRRRRRRRR
-        }
         formData.append(key, form[key]);
       }
 
