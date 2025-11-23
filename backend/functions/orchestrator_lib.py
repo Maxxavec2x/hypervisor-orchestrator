@@ -238,6 +238,7 @@ def uploadIsoToVolume(vol, iso_local_path, conn):
 # DOMAIN DEFINITION (VM CREATION)
 # ------------------------------
 
+#TODO: Refactorer ce code il est HORRIBLE mais là j'ai vraiment la flemme
 def defineXML_domain(conn, request):
     print("Création d'une nouvelle VM ")
     try:
@@ -258,19 +259,25 @@ def defineXML_domain(conn, request):
 
         pool = getStoragePool(conn)
         if not disk_path:
+            disk_vol_name = f"disk_{domain_name}.qcow2"
+            print(f"disk_vol_name : {disk_vol_name}")
+            if volumeExists(pool, disk_vol_name):
+                print("Le disque existe déjà pour cette vm existe déjà, on le delete")
+                disk = pool.storageVolLookupByName(disk_vol_name)
+                disk.delete()
             disk_path = createStoragePoolVolume(pool, domain_name)
 
         iso_pool_path = None
         if iso_local_tmp: # Les 3 prochaines lignes sont DEGUEULASSE, merci de ne pas juger les pythoner j'ai pas le temps
             iso_name = os.path.splitext(filename)[0] 
             size_mb = os.path.getsize(iso_local_tmp) // (1024 * 1024)
-            vol_name = f"{iso_name}.iso" 
-            if not volumeExists(pool, vol_name):
+            iso_vol_name = f"{iso_name}.iso" 
+            if not volumeExists(pool, iso_vol_name):
                 vol = createIsoVolume(pool, iso_name, size_mb)
                 iso_pool_path = uploadIsoToVolume(vol, iso_local_tmp, conn)
             else:
                 print("L'iso est déjà upload sur le pool, donc on le réutilise au lieu de le recréer ")
-                vol = pool.storageVolLookupByName(vol_name)
+                vol = pool.storageVolLookupByName(iso_vol_name)
                 iso_pool_path = vol.path()
 
         vm_xml_description = f'''
