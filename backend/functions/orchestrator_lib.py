@@ -156,7 +156,12 @@ def get_snapshot_name_domain(conn, name):
     except Exception as e:
         return make_response("<h1>Unknown: Error when getting snapshot</h1>", 400)
 
-UPLOAD_FOLDER = "/home/maxx/iso/iso-imported" # A voir pour chopper le pool pour les iso ou un truc comme ça 
+UPLOAD_FOLDER = "./isos" # A voir pour chopper le pool pour les iso ou un truc comme ça 
+
+# ------------------------------
+# Storage POOL
+# ------------------------------
+
 def getStoragePool(conn):
     try:
         pool = conn.storagePoolLookupByName("default")
@@ -164,52 +169,99 @@ def getStoragePool(conn):
     except libvirt.libvirtError:
         raise make_response("<h1>Erreur : la storage pool 'default' est introuvable.<h1>", 400)
 
+def getStoragePoolPath(pool):
+    xml = pool.XMLDesc()
+    root = ET.fromstring(xml)
+    return root.find('./target/path').text
+
+
+# ------------------------------
+# STORAGE VOLUMES (DISK + ISO)
+# ------------------------------
+
 def createStoragePoolVolume(pool, name):    
-        vol_xml = f"""
-        <volume>
-          <name>disk_{name}.qcow2</name>
-          <allocation>0</allocation>
-          <capacity unit="G">20</capacity>
-          <target>
-            <format type="qcow2"/>
-          </target>
-        </volume>"""
+    vol_xml = f"""
+    <volume>
+      <name>disk_{name}.qcow2</name>
+      <allocation>0</allocation>
+      <capacity unit="G">20</capacity>
+      <target>
+        <format type="qcow2"/>
+      </target>
+    </volume>"""
+    new_vol = pool.createXML(vol_xml, 0)   
+    return new_vol.path()
 
-        new_vol = pool.createXML(vol_xml, 0)   
-        return new_vol.path()
 
-# Permet de créer une nouvelle vm
+def createIsoVolume(pool, iso_name, size_mb):
+    vol_xml = f"""
+    <volume>
+      <name>{iso_name}.iso</name>
+      <capacity unit='M'>{size_mb}</capacity>
+      <target>
+        <format type='raw'/>
+      </target>
+    </volume>
+    """
+    vol = pool.createXML(vol_xml, 0)
+    return vol
+
+
+def uploadIsoToVolume(vol, iso_local_path, conn):
+    filesize = os.path.getsize(iso_local_path)
+    stream = conn.newStream(0)
+
+    # Start upload
+    vol.upload(stream, 0, filesize)
+
+    # Write file to stream
+    with open(iso_local_path, "rb") as f:
+        while True:
+            data = f.read(64 * 1024)
+            if not data:
+                break
+            stream.send(data)
+
+    stream.finish()
+    return vol.path()
+
+
+# ------------------------------
+# DOMAIN DEFINITION (VM CREATION)
+# ------------------------------
+
 def defineXML_domain(conn, request):
-    # WARNING: Override existing domain with same UUID and name ! Can be used to update a Domain
-    # TODO: Fonction pour créer un disque - TO CHECK
-
     print("Création d'une nouvelle VM ")
     try:
         domain_name = request.form['domain_name']
         cpu_allocated = request.form['cpu_allocated']
         ram_allocated = request.form['ram_allocated']
-        disk_path = request.form.get('disk_path', None) #Par défaut on pars du principe que le disque n'existe pas
-        print("disk path : ", disk_path)
-        #Gestion upload iso :
+        disk_path = request.form.get('disk_path', None)
+
+        # Upload ISO (local → server temporary)
         iso_file = request.files.get('iso_file')
         if iso_file:
             filename = secure_filename(iso_file.filename)
-            save_path = os.path.join(UPLOAD_FOLDER, filename)
-            iso_file.save(save_path)   # on sauvegarde l'iso
-            iso_path = save_path
+            temp_save_path = os.path.join(UPLOAD_FOLDER, filename)
+            iso_file.save(temp_save_path)
+            iso_local_tmp = temp_save_path
         else:
-            iso_path = None
+            iso_local_tmp = None
 
-        #Gestion des disques
+        pool = getStoragePool(conn)
         if not disk_path:
-            print("ENTREE DANS LE IF: ")
-            pool = getStoragePool(conn)
-            disk_path = createStoragePoolVolume(pool,domain_name)
-        
-        print("Fin de la configuration :")
+            disk_path = createStoragePoolVolume(pool, domain_name)
+
+        iso_pool_path = None
+        if iso_local_tmp:
+            iso_name = os.path.splitext(filename)[0]
+            size_mb = os.path.getsize(iso_local_tmp) // (1024 * 1024)
+
+            vol = createIsoVolume(pool, iso_name, size_mb)
+            iso_pool_path = uploadIsoToVolume(vol, iso_local_tmp, conn)
 
         vm_xml_description = f'''
-        <domain type='kvm' id='40'>
+        <domain type='kvm'>
             <name>{domain_name}</name>
             <memory unit='KiB'>{ram_allocated}</memory>
             <currentMemory unit='KiB'>{ram_allocated}</currentMemory>
@@ -221,29 +273,41 @@ def defineXML_domain(conn, request):
             </os>
             <devices>
                 <emulator>/usr/bin/qemu-system-x86_64</emulator>
+                
+                <!-- Disque principal -->
                 <disk type='file' device='disk'>
                     <driver name='qemu' type='qcow2'/>
-                    <source file='{disk_path}' index='2' />
+                    <source file='{disk_path}'/>
                     <target dev='vda' bus='virtio'/>
                 </disk>
+                
+                <!-- ISO -->
+                {""
+                if not iso_pool_path else
+                f"""
                 <disk type='file' device='cdrom'>
-                    <driver name='qemu' type='raw' index='1' />
-                    <source file='{iso_path}'/>
-                    <target dev='sda' bus='sata' />
+                    <driver name='qemu' type='raw'/>
+                    <source file='{iso_pool_path}'/>
+                    <target dev='sda' bus='sata'/>
                     <readonly/>
                 </disk>
+                """}
+
                 <graphics type='vnc' port='5900' autoport='yes' listen='0.0.0.0'>
                     <listen type='address' address='0.0.0.0'/>
                 </graphics>
+
                 <audio id='1' type='none'/>
             </devices>
         </domain>
         '''
-        getStoragePool(conn)
+
         conn.defineXML(vm_xml_description)
         return make_response("Success", 200)
+
     except libvirt.libvirtError as e:
         return make_response(f"libvirtError: Error when defining domain : {e}", 400)
+
     except Exception as e:
         print(e)
         return make_response("Unknown: Error when defining domain", 400)
