@@ -2,6 +2,10 @@
 
 set -e
 SCRIPT_DIR=$(dirname $0)
+
+#Création du dossier pour contenir les iso locaux avant upload :
+mkdir -p "$SCRIPT_DIR/isos"
+
 # Pour checker si c'est la première fois que l'user execute le script
 # (c'est fou ce qu'on est obligé de faire pour pas utiliser de docker....)
 if [ ! -d "$SCRIPT_DIR/.env" ]; then
