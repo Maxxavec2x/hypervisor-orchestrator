@@ -207,6 +207,14 @@ def createIsoVolume(pool, iso_name, size_mb):
     return vol
 
 
+def volumeExists(pool, vol_name):
+    try:
+        pool.storageVolLookupByName(vol_name)
+        return True
+    except libvirt.libvirtError:
+        return False
+
+
 def uploadIsoToVolume(vol, iso_local_path, conn):
     filesize = os.path.getsize(iso_local_path)
     stream = conn.newStream(0)
@@ -253,12 +261,17 @@ def defineXML_domain(conn, request):
             disk_path = createStoragePoolVolume(pool, domain_name)
 
         iso_pool_path = None
-        if iso_local_tmp:
-            iso_name = os.path.splitext(filename)[0]
+        if iso_local_tmp: # Les 3 prochaines lignes sont DEGUEULASSE, merci de ne pas juger les pythoner j'ai pas le temps
+            iso_name = os.path.splitext(filename)[0] 
             size_mb = os.path.getsize(iso_local_tmp) // (1024 * 1024)
-
-            vol = createIsoVolume(pool, iso_name, size_mb)
-            iso_pool_path = uploadIsoToVolume(vol, iso_local_tmp, conn)
+            vol_name = f"{iso_name}.iso" 
+            if not volumeExists(pool, vol_name):
+                vol = createIsoVolume(pool, iso_name, size_mb)
+                iso_pool_path = uploadIsoToVolume(vol, iso_local_tmp, conn)
+            else:
+                print("L'iso est déjà upload sur le pool, donc on le réutilise au lieu de le recréer ")
+                vol = pool.storageVolLookupByName(vol_name)
+                iso_pool_path = vol.path()
 
         vm_xml_description = f'''
         <domain type='kvm'>
