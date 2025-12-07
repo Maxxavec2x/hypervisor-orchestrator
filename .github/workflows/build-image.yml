@@ -1,0 +1,41 @@
+name: "Build the hypervisor-orchestrator-front docker image"
+env:
+  NAME: "hypervisor-orchestrator-front"
+  REGISTRY: ghcr.io/maxxavec2x
+  CONTEXT: "frontend/hypervisor-orchestrator-hmi"
+
+on:
+  push:
+    branches:
+      - main
+      - feature/imageDocker-front
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Build container image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          context: ${{ env.CONTEXT }}
+          image: ${{ env.NAME }}
+          tags: latest
+          containerfiles: ${{ env.CONTEXT }}/Dockerfile
+          layers: false
+          oci: true
+      
+      - name: Push to Container Registry
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image: ${{ env.NAME }}
+          tags: latest
