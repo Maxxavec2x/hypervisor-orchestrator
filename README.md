@@ -25,7 +25,8 @@ To start the backend, just start the `./backend/start_backend.sh` script.
 To start the frontend, you have three choices:
 
 1. (Suggested) : Use the docker image that we publish in the package section of github. To do this, use `docker run -p 3000:3000 ghcr.io/maxxavec2x/hypervisor-orchestrator-front`
-2. Install the latest node package, and run the ./frontend/hypervisor-orchestrator-hmi/start_frontend.sh. It will install all the dependencies in your machine, and start the developpement webserver.<br>
+2. Install the latest node package, and run the `./frontend/hypervisor-orchestrator-hmi/start_frontend.sh`. It will install all the dependencies in your machine, and start the developpement webserver.<br>
+3. Compile the Docker image yourself and use it, using the Dockerfile in `./frontend/hypervisor-orchestrator-hmi/Dockerfile`
 
 The web interface will be then available at `localhost:3000` in your favorite browser.
 
