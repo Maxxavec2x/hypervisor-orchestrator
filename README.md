@@ -1,32 +1,104 @@
-# hypervisor-orchestrator
+# Hypervisor-Orchestrator
 
-## About the project :
+## About the Project
+This project enables the management of virtual machines through a web interface. Virtual machines can be installed locally or on a remote machine.
 
+### Available Features
+| Feature |
+|---------|
+| VM creation |
+| VM shutdown |
+| VM deletion |
+| Viewing and interacting with a VM via a screen visualization tab |
+| Accessing VM status information (VM name, hardware configuration, operational status) |
+| Accessing host machine status information |
+| Adding a new host machine |
 
+### Technical Stack
+- Virtual machine management: [libvirt](https://libvirt.org/)
+- Backend: [Python Flask](https://flask.palletsprojects.com/en/stable/)
+- Frontend: [React](https://react.dev/)
 
-## Running the project:
+---
 
-### Requirement :
+## Running the Project
 
-You need to have an ssh key access to all the hypervisors you want to orchestrate. (Even localhost)</br>
-To get ssh key access to a distant hypervisor, please use `ssh-copy-id <user@hypervisorIp>`. For example, `ssh-copy-id localhost`.
-#### Dependencies: 
-To run the backend, you need to have installed :
-- websockify (https://github.com/novnc/websockify)<br/>
-If you use Arch (btw), you can download it from the AUR : `yay -S websockify`.
-- python-pip 
+### Requirements
+You need SSH key access to all the hypervisors you want to orchestrate (including localhost).
+To set up SSH key access to a remote hypervisor, use:
+```bash
+ssh-copy-id <user@hypervisorIp>
+```
+For example:
+```bash
+ssh-copy-id localhost
+```
+If you don’t have an SSH key, generate one using:
+```bash
+ssh-keygen
+```
 
-### Backend: 
+---
 
-To start the backend, just start the `./backend/start_backend.sh` script.
+### Backend Setup
 
-### Frontend
+#### 1. Install Required Packages
+```bash
+sudo apt install qemu-kvm libvirt-clients libvirt-daemon-system virtinst libvirt-daemon libvirt-dev
+```
 
-To start the frontend, you have three choices:
+#### 2. Activate libvirt
+Edit `/etc/default/libvirtd` and set `start_libvirtd` to `yes`, then restart the libvirt daemon:
+```bash
+sudo /etc/init.d/libvirtd restart
+```
 
-1. (Suggested) : Use the docker image that we publish in the package section of github. To do this, use `docker run -p 3000:3000 ghcr.io/maxxavec2x/hypervisor-orchestrator-front`
-2. Install the latest node package, and run the `./frontend/hypervisor-orchestrator-hmi/start_frontend.sh`. It will install all the dependencies in your machine, and start the developpement webserver.<br>
-3. Compile the Docker image yourself and use it, using the Dockerfile in `./frontend/hypervisor-orchestrator-hmi/Dockerfile`
+#### 3. Create a Storage Pool
+```bash
+virsh -c qemu:///system pool-define-as --name default --type dir --target /path/to/store/disk
+sudo chgrp libvirt /path/to/store/disk
+virsh -c qemu:///system pool-start default
+```
 
-The web interface will be then available at `localhost:3000` in your favorite browser.
+#### 4. Install websockify
+Install [websockify](https://github.com/novnc/websockify) to view VM screens in your browser.
 
+#### 5. Install Python Dependencies
+Ensure `pip` is installed for your Python version:
+```bash
+sudo apt install python3.13-venv python3-pip
+```
+
+#### 6. Start the Backend
+Run the script:
+```bash
+./backend/start_backend.sh
+```
+
+---
+
+### Frontend Setup
+
+You have three options to start the frontend:
+
+#### 1. (Recommended) Use the Docker Image
+```bash
+docker run -p 3000:3000 ghcr.io/maxxavec2x/hypervisor-orchestrator-front
+```
+
+#### 2. Run Locally with Node.js
+Ensure `npm` is installed, then run:
+```bash
+./frontend/hypervisor-orchestrator-hmi/start_frontend.sh
+```
+
+#### 3. Build the Docker Image Yourself
+Use the Dockerfile located at:
+```
+./frontend/hypervisor-orchestrator-hmi/Dockerfile
+```
+
+The web interface will be available at [localhost:3000](http://localhost:3000) in your browser.
+
+## Side note
+`exo1.c` is not part of the project. It is simply a file containing exercise solutions.
