@@ -3,6 +3,8 @@
 ## About the Project
 This project enables the management of virtual machines through a web interface. Virtual machines can be installed locally or on a remote machine.
 
+## Video
+https://github.com/user-attachments/assets/7380e7c2-8a23-4c3b-ad9b-e71d88f1b198
 ### Available Features
 | Feature |
 |---------|
